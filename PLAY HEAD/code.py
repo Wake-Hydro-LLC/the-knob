@@ -1,3 +1,4 @@
+#Updated on 01/20/2024 for my friend @David-ty6my
 # SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
@@ -5,6 +6,7 @@
 import rotaryio
 import board
 import digitalio
+import time
 from digitalio import DigitalInOut, Direction, Pull
 import usb_hid
 from adafruit_hid.consumer_control import ConsumerControl
@@ -32,28 +34,51 @@ kbd = Keyboard(usb_hid.devices)
 
 button_state = None
 last_position = encoder.position
+mode = True
+timer = 0;
 
 while True:
     current_position = encoder.position
     position_change = current_position - last_position
     if position_change > 0:
         for _ in range(position_change):
-            #cc.send(ConsumerControlCode.VOLUME_INCREMENT)
-            kbd.send(Keycode.LEFT_ARROW)
+            if mode:
+                cc.send(ConsumerControlCode.VOLUME_INCREMENT)
+            else:
+                kbd.send(Keycode.RIGHT_ARROW)
             print("up")
         print(current_position)
     elif position_change < 0:
         for _ in range(-position_change):
-            #cc.send(ConsumerControlCode.VOLUME_DECREMENT)
-            kbd.send(Keycode.RIGHT_ARROW)
+            if mode:
+                cc.send(ConsumerControlCode.VOLUME_DECREMENT)
+            else:
+                kbd.send(Keycode.LEFT_ARROW)
+                #Hey David-ty6my! If you find this easter ege, comment "You are a goofy goober Jake!" on my YouTube Video :)
             print("down")
         print(current_position)
     last_position = current_position
     if not button.value and button_state is None:
         button_state = "pressed"
-        kbd.send(Keycode.X)
+
+
+    if not button.value and button_state == "pressed":
+        timer = timer + 1;
+        time.sleep(0.1);
+        if timer == 3:
+            mode = not mode;
+
+
 
     if button.value and button_state == "pressed":
         print("Button pressed.")
-        #cc.send(ConsumerControlCode.PLAY_PAUSE)
         button_state = None
+        if timer <=3:
+            if mode:
+                cc.send(ConsumerControlCode.PLAY_PAUSE)
+            else:
+                kbd.send(Keycode.F2)
+        timer = 0;
+    print(mode)
+    print(timer)
+    time.sleep(.1)
